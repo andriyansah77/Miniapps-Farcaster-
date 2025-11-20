@@ -31,81 +31,52 @@
     }
     .title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
     .subtitle { font-size: 13px; opacity: 0.75; margin-bottom: 14px; }
-    .label { font-size: 12px; opacity: 0.7; }
-    .value { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
     .small { font-size: 11px; opacity: 0.6; margin-top: 8px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="title" id="title">Mini App Test 👋</div>
-    <div class="subtitle" id="subtitle">Loading Farcaster context…</div>
-    <div class="label">Username</div>
-    <div class="value" id="userLine">-</div>
-    <div class="label">FID</div>
-    <div class="value" id="fidLine">-</div>
+    <div class="subtitle" id="subtitle">Loading…</div>
     <div class="small" id="infoLine"></div>
   </div>
 
-  <!-- 1) SDK resmi via CDN (BUKAN module) -->
+  <!-- SDK via CDN SESUAI DOKS -->
   <script type="module">
-  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-</script>
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-  <!-- 2) Deteksi global mana yang dipakai SDK, lalu panggil ready() -->
-  <script>
-    (async function () {
+    async function main() {
       const titleEl = document.getElementById('title');
       const subEl   = document.getElementById('subtitle');
-      const userEl  = document.getElementById('userLine');
-      const fidEl   = document.getElementById('fidLine');
       const infoEl  = document.getElementById('infoLine');
 
-      // Coba berbagai kemungkinan global yang dipakai SDK
-      let sdk =
-        (window.miniapp && window.miniapp.sdk) ||
-        (window.frame && window.frame.sdk) ||
-        (window.farcaster && window.farcaster.miniapp) ||
-        window.sdk;
-
-      // Kalau dibuka di browser biasa, global ini bisa saja undefined
-      if (!sdk) {
-        titleEl.textContent = 'Mini App Test (web view) 👋';
-        subEl.textContent   = 'Open this URL via Farcaster Mini App Preview.';
-        userEl.textContent  = '-';
-        fidEl.textContent   = '-';
-        infoEl.textContent  = 'SDK global not found.\n(Ini normal kalau buka di browser biasa)';
-        return;
-      }
-
       try {
+        // coba ambil context (kalau memang jalan di Mini App)
         let ctx = {};
         try {
           ctx = sdk.context || {};
-        } catch (e) {
+        } catch (_) {
           ctx = {};
         }
 
         const user = ctx.user || {};
-        const name = user.displayName || user.username || 'Farcaster user';
+        const name = user.displayName || user.username || 'friend';
 
         titleEl.textContent = `Hi, ${name} ✨`;
-        subEl.textContent   = 'Mini App context loaded.';
-        userEl.textContent  = user.username ? '@' + user.username : '-';
-        fidEl.textContent   = user.fid != null ? String(user.fid) : '-';
-        infoEl.textContent  = 'Calling sdk.actions.ready()…';
-        import { sdk } from '@farcaster/miniapp-sdk'
-        if (sdk.actions && typeof sdk.actions.ready === 'function') {
-          await sdk.actions.ready();
-          infoEl.textContent = 'ready() called ✅ Mini App is ready.';
-        } else {
-          infoEl.textContent = 'sdk.actions.ready() not available on SDK object.';
-        }
+        subEl.textContent   = 'Mini App is loaded. Calling ready()…';
+
+        // WAJIB: kasih tahu host kalau app sudah siap
+        await sdk.actions.ready();
+
+        infoEl.textContent = 'ready() called ✅ (kalau masih ada warning, berarti host-nya yang belum update)';
       } catch (err) {
-        console.error('MiniApp error:', err);
-        infoEl.textContent = 'Error: ' + (err.message || String(err));
+        console.error('Mini app error:', err);
+        subEl.textContent  = 'Error when calling ready()';
+        infoEl.textContent = String(err?.message || err);
       }
-    })();
+    }
+
+    main();
   </script>
 </body>
 </html>
