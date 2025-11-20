@@ -2,56 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>MiniApp Test</title>
+  <title>Mini App Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
       color-scheme: dark;
       font-family: system-ui, sans-serif;
-      background: #0a0a0a;
-      color: white;
+      background: #050816;
+      color: #e5edf9;
     }
     body {
       margin: 0;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      background: radial-gradient(circle at top, #1d2b53 0, #050816 55%);
     }
+    .card {
+      background: rgba(10, 18, 35, 0.98);
+      border-radius: 16px;
+      padding: 20px 24px;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(88, 113, 255, 0.35);
+      text-align: left;
+    }
+    .title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; opacity: 0.75; margin-bottom: 14px; }
+    .label { font-size: 12px; opacity: 0.7; }
+    .value { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    .small { font-size: 11px; opacity: 0.6; margin-top: 8px; }
   </style>
 </head>
 <body>
-  <div id="app">Loading MiniApp…</div>
+  <div class="card">
+    <div class="title" id="title">Mini App Test 👋</div>
+    <div class="subtitle" id="subtitle">Loading Farcaster context…</div>
+    <div class="label">Username</div>
+    <div class="value" id="userLine">-</div>
+    <div class="label">FID</div>
+    <div class="value" id="fidLine">-</div>
+    <div class="small" id="infoLine"></div>
+  </div>
 
-  <!-- PENTING: gunakan IIFE SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/browser-iife.min.js"></script>
+  <!-- CDN resmi dari docs: ESM via esm.sh -->
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-  <script>
-    async function init() {
-      const sdk = window.farcaster.miniapp;
+    async function main() {
+      const titleEl = document.getElementById('title');
+      const subEl   = document.getElementById('subtitle');
+      const userEl  = document.getElementById('userLine');
+      const fidEl   = document.getElementById('fidLine');
+      const infoEl  = document.getElementById('infoLine');
 
-      const el = document.getElementById("app");
+      try {
+        // Coba ambil context (kalau di Mini App)
+        let user = {};
+        try {
+          const ctx = sdk.context || {};
+          user = ctx.user || {};
+        } catch (e) {
+          // kalau di browser biasa, context bisa undefined
+          user = {};
+        }
 
-      const inApp = await sdk.isInMiniApp();
+        const name =
+          user.displayName || user.username || 'Farcaster user (or web viewer)';
 
-      if (!inApp) {
-        el.textContent = "Not in MiniApp — open via Warpcast Preview Tool.";
-        return;
+        titleEl.textContent = `Hi, ${name} ✨`;
+        subEl.textContent   = 'If you see this in Warpcast, Mini App is running.';
+        userEl.textContent  = user.username ? `@${user.username}` : '-';
+        fidEl.textContent   = user.fid != null ? String(user.fid) : '-';
+
+        infoEl.textContent = 'Trying to call sdk.actions.ready()…';
+
+        // ⬇️ PENTING: selalu coba panggil ready kalau ada
+        if (sdk.actions && typeof sdk.actions.ready === 'function') {
+          try {
+            await sdk.actions.ready();
+            infoEl.textContent = 'ready() called successfully ✅';
+          } catch (e) {
+            infoEl.textContent = 'ready() error: ' + (e.message || String(e));
+          }
+        } else {
+          infoEl.textContent = 'sdk.actions.ready() not available in this env.';
+        }
+      } catch (err) {
+        console.error('MiniApp error:', err);
+        infoEl.textContent = 'Fatal error: ' + (err?.message || String(err));
       }
-
-      const ctx = sdk.context;
-      const user = ctx.user;
-
-      el.innerHTML = `
-        <h2>Hello, ${user.displayName || user.username}</h2>
-        <p>FID: ${user.fid}</p>
-        <p>MiniApp Loaded Successfully 🎉</p>
-      `;
-
-      await sdk.actions.ready();
     }
 
-    init();
+    main();
   </script>
 </body>
 </html>
