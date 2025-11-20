@@ -2,169 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>My First Farcaster Mini App</title>
+  <title>MiniApp Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
       color-scheme: dark;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro", Arial, sans-serif;
-      background: #050816;
-      color: #e5edf9;
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: white;
     }
     body {
       margin: 0;
-      padding: 0;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at top, #1d2b53 0, #050816 55%);
-    }
-    .card {
-      background: rgba(10, 18, 35, 0.95);
-      border-radius: 16px;
-      padding: 20px 24px;
-      max-width: 360px;
-      width: 90%;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(88, 113, 255, 0.35);
-    }
-    .title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .subtitle {
-      font-size: 13px;
-      opacity: 0.7;
-      margin-bottom: 16px;
-    }
-    .row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      background: #141b2e;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .label {
-      font-size: 12px;
-      opacity: 0.7;
-    }
-    .value {
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .badge {
-      display: inline-flex;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(120, 148, 255, 0.5);
-      font-size: 11px;
-      opacity: 0.9;
-      margin-bottom: 10px;
-      gap: 6px;
-      align-items: center;
-    }
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #4ade80;
-    }
-    .small {
-      font-size: 11px;
-      opacity: 0.6;
-      margin-top: 6px;
+      min-height: 100vh;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="badge">
-      <span class="dot"></span>
-      <span>Farcaster Mini App</span>
-    </div>
-    <div class="title" id="title">Hello, frens 👋</div>
-    <div class="subtitle">Loading Farcaster context…</div>
+  <div id="app">Loading MiniApp…</div>
 
-    <div class="row">
-      <div class="avatar" id="avatar"></div>
-      <div>
-        <div class="label">User</div>
-        <div class="value" id="userLine">-</div>
-      </div>
-    </div>
+  <!-- PENTING: gunakan IIFE SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/browser-iife.min.js"></script>
 
-    <div class="row">
-      <div>
-        <div class="label">FID</div>
-        <div class="value" id="fidLine">-</div>
-      </div>
-    </div>
+  <script>
+    async function init() {
+      const sdk = window.farcaster.miniapp;
 
-    <div class="small" id="locationLine"></div>
-  </div>
+      const el = document.getElementById("app");
 
-  <!-- SDK via CDN (tanpa install Node) -->
- import { sdk } from 'https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/+esm';
+      const inApp = await sdk.isInMiniApp();
 
-    async function main() {
-      try {
-        // Ambil context dari Farcaster client
-        const ctx = sdk.context; // user, client, location, dll 1
-        const user = ctx.user || {};
-        const loc  = ctx.location;
-
-        const titleEl    = document.getElementById('title');
-        const userLineEl = document.getElementById('userLine');
-        const fidLineEl  = document.getElementById('fidLine');
-        const avatarEl   = document.getElementById('avatar');
-        const locationEl = document.getElementById('locationLine');
-
-        const displayName = user.displayName || user.username || 'Farcaster fren';
-
-        titleEl.textContent    = `Hi, ${displayName} ✨`;
-        userLineEl.textContent = user.username
-          ? `@${user.username}`
-          : `FID ${user.fid ?? '-'}`;
-        fidLineEl.textContent  = user.fid ?? '-';
-
-        if (user.pfpUrl) {
-          const img = document.createElement('img');
-          img.src = user.pfpUrl;
-          img.alt = displayName;
-          avatarEl.appendChild(img);
-        } else {
-          avatarEl.style.background =
-            'linear-gradient(135deg,#4f46e5,#22d3ee)';
-        }
-
-        if (loc?.type) {
-          locationEl.textContent = `Opened from: ${loc.type}`;
-        } else {
-          locationEl.textContent = 'Opened from: unknown';
-        }
-
-        // WAJIB: tell Farcaster “udah siap ditampilin”
-        await sdk.actions.ready();  // 2
-      } catch (err) {
-        console.error('Mini app error:', err);
+      if (!inApp) {
+        el.textContent = "Not in MiniApp — open via Warpcast Preview Tool.";
+        return;
       }
+
+      const ctx = sdk.context;
+      const user = ctx.user;
+
+      el.innerHTML = `
+        <h2>Hello, ${user.displayName || user.username}</h2>
+        <p>FID: ${user.fid}</p>
+        <p>MiniApp Loaded Successfully 🎉</p>
+      `;
+
+      await sdk.actions.ready();
     }
 
-    main();
+    init();
   </script>
 </body>
 </html>
