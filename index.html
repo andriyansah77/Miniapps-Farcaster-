@@ -48,7 +48,9 @@
   </div>
 
   <!-- 1) SDK resmi via CDN (BUKAN module) -->
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/index.min.js"></script>
+  <script type="module">
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+</script>
 
   <!-- 2) Deteksi global mana yang dipakai SDK, lalu panggil ready() -->
   <script>
@@ -92,7 +94,7 @@
         userEl.textContent  = user.username ? '@' + user.username : '-';
         fidEl.textContent   = user.fid != null ? String(user.fid) : '-';
         infoEl.textContent  = 'Calling sdk.actions.ready()…';
-
+        import { sdk } from '@farcaster/miniapp-sdk'
         if (sdk.actions && typeof sdk.actions.ready === 'function') {
           await sdk.actions.ready();
           infoEl.textContent = 'ready() called ✅ Mini App is ready.';
